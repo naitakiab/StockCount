@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <title>ระบบตรวจนับสต็อก</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary-color: #2196F3;
+        --secondary-color: #f0f4f8;
+        --text-color: #333;
+        --border-color: #e0e0e0;
+        --success-color: #4CAF50;
+        --error-color: #f44336;
+        --info-color: #0d47a1;
+      }
+      body {
+        font-family: 'Kanit', sans-serif;
+        background-color: #f4f7f9;
+        margin: 0;
+        padding: 0;
+        color: var(--text-color);
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 30px;
+        font-weight: 700;
+      }
+      .tab-menu {
+        display: flex;
+        justify-content: center;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 20px;
+      }
+      .tab-menu button {
+        background-color: transparent;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 15px 25px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #555;
+        transition: all 0.3s ease;
+      }
+      .tab-menu button:hover,
+      .tab-menu button.active {
+        background-color: var(--primary-color);
+        color: #fff;
+        border-radius: 8px 8px 0 0;
+      }
+      .tabcontent {
+        display: none;
+        padding: 20px;
+      }
+      .tabcontent.active {
+        display: block;
+      }
+      h2 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+      input[type="text"],
+      input[type="number"],
+      select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+      }
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      select:focus {
+        border-color: var(--primary-color);
+        outline: none;
+      }
+      .btn {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 10px;
+        transition: background-color 0.3s ease;
+      }
+      .btn:hover {
+        background-color: #1976D2;
+      }
+      .message {
+        text-align: center;
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: 500;
+      }
+      .message.success {
+        background-color: #e8f5e9;
+        color: var(--success-color);
+      }
+      .message.error {
+        background-color: #ffebee;
+        color: var(--error-color);
+      }
+      .message.loading {
+        background-color: #e3f2fd;
+        color: var(--info-color);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 14px;
+      }
+      table, th, td {
+        border: 1px solid var(--border-color);
+        padding: 8px;
+      }
+      th {
+        background-color: var(--secondary-color);
+        font-weight: 700;
+      }
+      table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      .edit-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      .edit-form-container {
+        padding: 20px;
+        background-color: #f9f9f9;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-top: 20px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>ระบบตรวจนับสต็อก</h1>
+
+      <div class="tab-menu">
+        <button class="tablinks active" onclick="openTab(event, 'record-count')">บันทึกการตรวจนับ</button>
+        <button class="tablinks" onclick="openTab(event, 'add-location')">เพิ่มสถานที่เก็บ</button>
+        <button class="tablinks" onclick="openTab(event, 'add-item')">เพิ่มรายการสินค้า</button>
+        <button class="tablinks" onclick="openTab(event, 'review-data')">ดู/แก้ไขข้อมูล</button>
+      </div>
+
+      <div id="record-count" class="tabcontent active">
+        <h2>บันทึกการตรวจนับ</h2>
+        <div class="form-group">
+          <label for="record-location-id">สถานที่เก็บ:</label>
+          <select id="record-location-id" onchange="updateLocationName()">
+            <option value="">-- เลือกสถานที่เก็บ --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="record-location-name">ชื่อสถานที่เก็บ:</label>
+          <input type="text" id="record-location-name" readonly>
+        </div>
+        <div class="form-group">
+          <label for="record-material-code">รหัสสินค้า: (กรุณาพิมพ์หรือ Scan Barcode)</label>
+          <input type="text" id="record-material-code" oninput="updateMaterialNameFromBarcode()">
+        </div>
+        <div class="form-group">
+          <label for="record-material-name">ชื่อสินค้า:</label>
+          <input type="text" id="record-material-name" readonly>
+        </div>
+        <div class="form-group">
+          <label for="record-counted-quantity">จำนวน:</label>
+          <input type="number" id="record-counted-quantity" min="0">
+        </div>
+        <div class="form-group">
+          <label for="record-user-id">ผู้บันทึก:</label>
+          <input type="text" id="record-user-id">
+        </div>
+        <button class="btn" onclick="submitCountRecord()">บันทึก</button>
+        <div id="record-message" class="message"></div>
+      </div>
+
+      <div id="add-location" class="tabcontent">
+        <h2>เพิ่มสถานที่เก็บ</h2>
+        <div class="form-group">
+          <label for="location-id">รหัสสถานที่เก็บ:</label>
+          <input type="text" id="location-id">
+        </div>
+        <div class="form-group">
+          <label for="location-name">ชื่อสถานที่เก็บ:</label>
+          <input type="text" id="location-name">
+        </div>
+        <button class="btn" onclick="submitLocation()">บันทึก</button>
+        <div id="location-message" class="message"></div>
+      </div>
+
+      <div id="add-item" class="tabcontent">
+        <h2>เพิ่มรายการสินค้า</h2>
+        <div class="form-group">
+          <label for="material-code">รหัสสินค้า: (กรุณาพิมพ์หรือ Scan Barcode)</label>
+          <input type="text" id="material-code">
+        </div>
+        <div class="form-group">
+          <label for="material-name">ชื่อสินค้า:</label>
+          <input type="text" id="material-name">
+        </div>
+        <div class="form-group">
+          <label for="material-unit">หน่วยนับ:</label>
+          <input type="text" id="material-unit">
+        </div>
+        <button class="btn" onclick="submitItem()">บันทึก</button>
+        <div id="item-message" class="message"></div>
+      </div>
+      
+      <div id="review-data" class="tabcontent">
+        <h2>ดู/แก้ไขข้อมูล</h2>
+        <p>คุณสามารถดูข้อมูลที่นี่ได้ และกดปุ่ม "แก้ไข" เพื่อแก้ไขข้อมูล</p>
+        <div class="form-group">
+          <label for="data-source">เลือกข้อมูล:</label>
+          <select id="data-source" onchange="displayData()">
+            <option value="locations">สถานที่เก็บ</option>
+            <option value="items">รายการสินค้า</option>
+            <option value="counts">บันทึกการตรวจนับ</option>
+          </select>
+        </div>
+        <div id="data-container"></div>
+        <div id="edit-form-container" class="edit-form-container">
+          <h3 id="edit-form-title">แก้ไขข้อมูล</h3>
+          <input type="hidden" id="edit-data-source">
+          <input type="hidden" id="edit-row-index">
+          <div id="edit-fields"></div>
+          <button class="btn" onclick="submitEdit()">บันทึกการแก้ไข</button>
+          <div id="edit-message" class="message"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // *** เปลี่ยน URL นี้เป็น Web App URL ที่คุณได้จาก Google Apps Script ***
+      // อย่าลืมว่าต้อง Deploy ใหม่ทุกครั้งที่แก้โค้ดเพื่อได้ URL ใหม่
+      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2HaZHkkzs_uN47E4KVSp8xcb28NW615E_u9smWIgxcB9m83IbPQHnAA-9dVUOVttxpw/exec';
+      let locationsData = [];
+      let itemsData = [];
+      let allData = {};
+
+      function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        if (evt) {
+          evt.currentTarget.classList.add("active");
+        } else {
+          document.getElementsByClassName("tablinks")[0].classList.add("active");
+        }
+        if (tabName === 'review-data') {
+          displayData();
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        fetch(`${SCRIPT_URL}?action=getDropdownData`)
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+          })
+          .then(data => {
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            populateDropdowns(data);
+          })
+          .catch(handleError);
+        openTab(null, 'record-count');
+      });
+
+      function populateDropdowns(data) {
+        if (!data || !data.locations || !data.items) {
+          console.error("Data received is not in the expected format.");
+          return;
+        }
+        locationsData = data.locations;
+        itemsData = data.items;
+        
+        const locationSelect = document.getElementById('record-location-id');
+        locationSelect.innerHTML = '<option value="">-- เลือกสถานที่เก็บ --</option>';
+        locationsData.forEach(loc => {
+          const option = document.createElement('option');
+          option.value = loc.id;
+          option.text = `${loc.id} - ${loc.name}`;
+          locationSelect.appendChild(option);
+        });
+      }
+
+      function updateLocationName() {
+        const locationId = document.getElementById('record-location-id').value;
+        const location = locationsData.find(loc => loc.id === locationId);
+        document.getElementById('record-location-name').value = location ? location.name : '';
+      }
+
+      function updateMaterialNameFromBarcode() {
+        const materialCode = document.getElementById('record-material-code').value;
+        const item = itemsData.find(item => item.code === materialCode);
+        document.getElementById('record-material-name').value = item ? item.name : '';
+      }
+
+      async function submitLocation() {
+        const locationID = document.getElementById('location-id').value;
+        const locationName = document.getElementById('location-name').value;
+        if (!locationID || !locationName) {
+          showErrorMessage('location-message', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+        showLoadingMessage('location-message', 'กำลังบันทึกข้อมูล...');
+        
+        const formData = new FormData();
+        formData.append('action', 'addLocation');
+        formData.append('locationID', locationID);
+        formData.append('locationName', locationName);
+        
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            if (result.status === 'success') {
+                showLocationMessage(result.message);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            handleError(error);
+        }
+      }
+
+      function showLocationMessage(message) {
+        showSuccessMessage('location-message', message);
+        document.getElementById('location-id').value = '';
+        document.getElementById('location-name').value = '';
+        fetch(`${SCRIPT_URL}?action=getDropdownData`)
+          .then(response => response.json())
+          .then(populateDropdowns)
+          .catch(handleError);
+      }
+
+      async function submitItem() {
+        const materialCode = document.getElementById('material-code').value;
+        const materialName = document.getElementById('material-name').value;
+        const unit = document.getElementById('material-unit').value;
+        if (!materialCode || !materialName || !unit) {
+          showErrorMessage('item-message', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+        showLoadingMessage('item-message', 'กำลังบันทึกข้อมูล...');
+        
+        const formData = new FormData();
+        formData.append('action', 'addItem');
+        formData.append('materialCode', materialCode);
+        formData.append('materialName', materialName);
+        formData.append('unit', unit);
+        
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            if (result.status === 'success') {
+                showItemMessage(result.message);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            handleError(error);
+        }
+      }
+
+      function showItemMessage(message) {
+        showSuccessMessage('item-message', message);
+        document.getElementById('material-code').value = '';
+        document.getElementById('material-name').value = '';
+        document.getElementById('material-unit').value = '';
+        fetch(`${SCRIPT_URL}?action=getDropdownData`)
+          .then(response => response.json())
+          .then(populateDropdowns)
+          .catch(handleError);
+      }
+
+      async function submitCountRecord() {
+        const locationID = document.getElementById('record-location-id').value;
+        const locationName = document.getElementById('record-location-name').value;
+        const materialCode = document.getElementById('record-material-code').value;
+        const materialName = document.getElementById('record-material-name').value;
+        const countedQuantity = document.getElementById('record-counted-quantity').value;
+        const userID = document.getElementById('record-user-id').value;
+
+        if (!locationID || !materialCode || !countedQuantity || !userID) {
+          showErrorMessage('record-message', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+        showLoadingMessage('record-message', 'กำลังบันทึกการตรวจนับ...');
+        
+        const formData = new FormData();
+        formData.append('action', 'recordCount');
+        formData.append('locationID', locationID);
+        formData.append('locationName', locationName);
+        formData.append('materialCode', materialCode);
+        formData.append('materialName', materialName);
+        formData.append('countedQuantity', countedQuantity);
+        formData.append('userID', userID);
+        
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            if (result.status === 'success') {
+                showRecordMessage(result.message);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            handleError(error);
+        }
+      }
+
+      function showRecordMessage(message) {
+        showSuccessMessage('record-message', message);
+        document.getElementById('record-location-id').value = '';
+        document.getElementById('record-location-name').value = '';
+        document.getElementById('record-material-code').value = '';
+        document.getElementById('record-material-name').value = '';
+        document.getElementById('record-counted-quantity').value = '';
+        document.getElementById('record-user-id').value = '';
+      }
+
+      async function displayData() {
+        showLoadingMessage('data-container', 'กำลังโหลดข้อมูล...');
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getAllData`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            renderTable(data);
+        } catch (error) {
+            handleDataError(error);
+        }
+      }
+
+      function renderTable(data) {
+        allData = data;
+        const dataSource = document.getElementById('data-source').value;
+        const container = document.getElementById('data-container');
+        container.innerHTML = '';
+        
+        let tableData = [];
+        if (!allData) {
+            handleDataError({message: 'ไม่สามารถโหลดข้อมูลได้'})
+            return;
+        }
+
+        if (dataSource === 'locations') {
+          tableData = allData.locations;
+        } else if (dataSource === 'items') {
+          tableData = allData.items;
+        } else if (dataSource === 'counts') {
+          tableData = allData.counts;
+        }
+
+        if (!tableData || tableData.length <= 1) {
+          container.innerHTML = '<p style="text-align:center;">ไม่มีข้อมูล</p>';
+          return;
+        }
+
+        let tableHtml = '<table><thead><tr>';
+        const headers = tableData[0];
+        headers.forEach(header => {
+          tableHtml += `<th>${header}</th>`;
+        });
+        if (dataSource === 'locations' || dataSource === 'items') {
+          tableHtml += '<th>การจัดการ</th>';
+        }
+        tableHtml += '</tr></thead><tbody>';
+
+        for (let i = 1; i < tableData.length; i++) {
+          tableHtml += '<tr>';
+          tableData[i].forEach(cell => {
+            tableHtml += `<td>${cell}</td>`;
+          });
+          if (dataSource === 'locations' || dataSource === 'items') {
+            tableHtml += `<td><button class="btn edit-btn" onclick="editData(${i}, '${dataSource}')">แก้ไข</button></td>`;
+          }
+          tableHtml += '</tr>';
+        }
+
+        tableHtml += '</tbody></table>';
+        container.innerHTML = tableHtml;
+      }
+      
+      function editData(rowIndex, dataSource) {
+        const editForm = document.getElementById('edit-form-container');
+        const editFields = document.getElementById('edit-fields');
+        const editTitle = document.getElementById('edit-form-title');
+        
+        if (!allData || !allData[dataSource] || !allData[dataSource][rowIndex]) {
+          console.error("Data for editing is not available.");
+          return;
+        }
+        
+        const data = allData[dataSource][rowIndex];
+        
+        editFields.innerHTML = '';
+        document.getElementById('edit-data-source').value = dataSource;
+        document.getElementById('edit-row-index').value = rowIndex + 1; // Apps Script ใช้ row index ที่เริ่มจาก 1
+
+        if (dataSource === 'locations') {
+          editTitle.textContent = 'แก้ไขข้อมูลสถานที่เก็บ';
+          editFields.innerHTML = `
+            <div class="form-group">
+              <label>รหัสสถานที่เก็บ:</label>
+              <input type="text" id="edit-location-id" value="${data[0]}">
+            </div>
+            <div class="form-group">
+              <label>ชื่อสถานที่เก็บ:</label>
+              <input type="text" id="edit-location-name" value="${data[1]}">
+            </div>
+          `;
+        } else if (dataSource === 'items') {
+          editTitle.textContent = 'แก้ไขข้อมูลรายการสินค้า';
+          editFields.innerHTML = `
+            <div class="form-group">
+              <label>รหัสสินค้า: (กรุณาพิมพ์หรือ Scan Barcode)</label>
+              <input type="text" id="edit-material-code" value="${data[0]}">
+            </div>
+            <div class="form-group">
+              <label>ชื่อสินค้า:</label>
+              <input type="text" id="edit-material-name" value="${data[1]}">
+            </div>
+            <div class="form-group">
+              <label>หน่วยนับ:</label>
+              <input type="text" id="edit-material-unit" value="${data[2]}">
+            </div>
+          `;
+        } else {
+          return;
+        }
+        
+        editForm.style.display = 'block';
+        editForm.scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      async function submitEdit() {
+        const dataSource = document.getElementById('edit-data-source').value;
+        const rowIndex = document.getElementById('edit-row-index').value;
+        
+        showLoadingMessage('edit-message', 'กำลังบันทึกการแก้ไข...');
+        
+        const formData = new FormData();
+        formData.append('action', `update${dataSource === 'locations' ? 'Location' : 'Item'}`);
+        formData.append('rowIndex', rowIndex);
+        
+        if (dataSource === 'locations') {
+          const locationID = document.getElementById('edit-location-id').value;
+          const locationName = document.getElementById('edit-location-name').value;
+          formData.append('locationID', locationID);
+          formData.append('locationName', locationName);
+        } else if (dataSource === 'items') {
+          const materialCode = document.getElementById('edit-material-code').value;
+          const materialName = document.getElementById('edit-material-name').value;
+          const unit = document.getElementById('edit-material-unit').value;
+          formData.append('materialCode', materialCode);
+          formData.append('materialName', materialName);
+          formData.append('unit', unit);
+        }
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            if (result.status === 'success') {
+                showEditMessage(result.message);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            handleError(error);
+        }
+      }
+      
+      function showEditMessage(message) {
+        showSuccessMessage('edit-message', message);
+        document.getElementById('edit-form-container').style.display = 'none';
+        displayData();
+      }
+
+      function showLoadingMessage(id, message) {
+        const msgDiv = document.getElementById(id);
+        if (msgDiv) {
+            msgDiv.textContent = message;
+            msgDiv.className = 'message loading';
+        }
+      }
+
+      function showSuccessMessage(id, message) {
+        const msgDiv = document.getElementById(id);
+        if (msgDiv) {
+            msgDiv.textContent = message;
+            msgDiv.className = 'message success';
+            setTimeout(() => { msgDiv.textContent = '', msgDiv.className = '' }, 5000);
+        }
+      }
+      
+      function showErrorMessage(id, message) {
+        const msgDiv = document.getElementById(id);
+        if (msgDiv) {
+            msgDiv.textContent = message;
+            msgDiv.className = 'message error';
+            setTimeout(() => { msgDiv.textContent = '', msgDiv.className = '' }, 5000);
+        }
+      }
+
+      function handleDataError(error) {
+        const container = document.getElementById('data-container');
+        container.innerHTML = `<div class="message error" style="margin-top:0;">${error.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง'}</div>`;
+        console.error(error);
+      }
+      
+      function handleError(error) {
+        console.error(error);
+        alert('เกิดข้อผิดพลาดในการเรียกใช้: ' + (error.message || 'Unknown error'));
+      }
+    </script>
+  </body>
+</html>
